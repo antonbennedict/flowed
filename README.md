@@ -6,7 +6,7 @@
 <p align="center"><b>Plan · Focus · Flow</b><br>A student planner that lives on your phone, works offline, and needs no account.</p>
 
 <p align="center">
-  <a href="https://YOUR-SITE.netlify.app"><b>Open Flowed →</b></a>
+  <a href="https://uniflowmobileapp.netlify.app"><b>Open Flowed →</b></a>
 </p>
 
 ---
@@ -34,7 +34,7 @@ Flowed keeps a student's whole semester in one place: classes, assignments, quiz
 
 ## Get Flowed
 
-Open **https://YOUR-SITE.netlify.app** and add it to your Home Screen. It installs in seconds and is free.
+Open **https://uniflowmobileapp.netlify.app** and add it to your Home Screen. It installs in seconds and is free.
 
 ### iPhone / iPad
 1. Open the link in **Safari** (other browsers on iPhone can't install apps).
