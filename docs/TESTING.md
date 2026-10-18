@@ -15,6 +15,7 @@ npm run test:all   # typecheck → lint → unit/contract → static build → b
 | `tests/alerts.test.ts` | Heads-up ordering, thresholds, stable ids, free-time slots, .ics validity (escaping, folding, RRULE, alarms). |
 | `scripts/e2e-offline.mjs` | Service-worker offline mode: reload, navigation and saving with no network. |
 | `scripts/e2e-features.mjs` | Renders a schedule image, scans it with real OCR, imports 7 classes, rescans **offline**; quick add; a heads-up for a task due in 30 min; text size; .ics export; no horizontal overflow on any page at 375px. Screenshots are saved to `test-results/features/`. |
+| `scripts/e2e-responsive.mjs` | iOS auto-zoom guard (every text field ≥16px on touch screens, incl. "Small" text, dialogs, paste box); no sideways overflow from 320px to 1440px incl. landscape phone and tablets; bottom bar / side rail / sidebar per width; simulated keyboard keeps the sheet above it and hides the tab bar. |
 | `scripts/e2e-smoke.mjs` | In real Edge/Chrome against `out/`: onboarding, creating a subject/class/task/exam through the UI, overlap warning, Catch-Up, completion, **persistence after a full reload**, bottom-nav "More", JSON export, the typed reset guard, re-import, every route rendering with no console errors. Screenshots are saved to `test-results/screens/`. |
 
 ## Manual release checklist (on a device)

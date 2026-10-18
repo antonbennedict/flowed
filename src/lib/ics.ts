@@ -5,7 +5,7 @@
  * Home Screen web app.
  */
 import { addMinutes, addWeeks, format, parseISO, startOfDay } from "date-fns";
-import type { ClassSchedule, Exam, Subject, Task, UserSettings } from "./db/schema";
+import type { ClassSchedule, Exam, PersonalEvent, Subject, Task, UserSettings } from "./db/schema";
 
 const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 const utc = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -23,9 +23,9 @@ function alarm(minutesBefore: number, text: string): string[] {
 }
 
 export function buildIcs(
-  data: { tasks: Task[]; exams: Exam[]; schedules: ClassSchedule[]; subjects: Subject[] },
+  data: { tasks: Task[]; exams: Exam[]; schedules: ClassSchedule[]; subjects: Subject[]; events?: PersonalEvent[] },
   settings: Pick<UserSettings, "taskReminderMinutes" | "examReminderMinutes" | "classReminderMinutes">,
-  opts: { includeClasses: boolean; includeTasks: boolean; includeExams: boolean; weeks: number },
+  opts: { includeClasses: boolean; includeTasks: boolean; includeExams: boolean; includeEvents?: boolean; weeks: number },
   now = new Date(),
 ): { ics: string; count: number } {
   const subj = new Map(data.subjects.map((s) => [s.id, s]));
@@ -63,6 +63,21 @@ export function buildIcs(
         ...(e.venue ? [`LOCATION:${esc(e.venue)}`] : []),
         `DESCRIPTION:${esc([s?.name, e.notes].filter(Boolean).join("\n"))}`,
       ], alarms);
+    }
+
+  if (opts.includeEvents)
+    for (const ev of data.events ?? []) {
+      if (parseISO(ev.endAt) < now) continue;
+      const s = parseISO(ev.startAt), e = parseISO(ev.endAt);
+      // All-day events use DATE values (end is exclusive per RFC 5545).
+      const when = ev.allDay
+        ? [`DTSTART;VALUE=DATE:${format(s, "yyyyMMdd")}`, `DTEND;VALUE=DATE:${format(addMinutes(startOfDay(e), 24 * 60), "yyyyMMdd")}`]
+        : [`DTSTART:${utc(s)}`, `DTEND:${utc(e)}`];
+      event(`event-${ev.id}`, [
+        ...when, `SUMMARY:${esc(ev.title)}`,
+        ...(ev.location ? [`LOCATION:${esc(ev.location)}`] : []),
+        ...(ev.description ? [`DESCRIPTION:${esc(ev.description)}`] : []),
+      ], !ev.allDay && settings.classReminderMinutes > 0 ? [alarm(settings.classReminderMinutes, `Soon: ${ev.title}`)] : []);
     }
 
   if (opts.includeClasses)

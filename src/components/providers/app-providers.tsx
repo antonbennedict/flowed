@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DbProvider } from "./db-provider";
 import { NativeBridge } from "./native-bridge";
+import { KeyboardAware } from "./keyboard-aware";
 import { OfflineSupport } from "./offline-support";
 import { SettingsProvider } from "./settings-provider";
 
@@ -19,6 +20,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <OfflineSupport />
+      <KeyboardAware />
       <FlowedIntro />
       <TooltipProvider>
         <DbProvider>
@@ -36,7 +38,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
             </ConfirmProvider>
           </SettingsProvider>
         </DbProvider>
-        <Toaster position="top-center" richColors closeButton />
+        <Toaster position="top-center" richColors closeButton mobileOffset={{ top: "calc(env(safe-area-inset-top) + 0.75rem)" }} />
       </TooltipProvider>
     </ThemeProvider>
   );

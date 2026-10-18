@@ -145,8 +145,8 @@ export default function SchedulePage() {
           )}
 
           {/* Desktop: time grid */}
-          <div className="hidden overflow-x-auto rounded-2xl border bg-card p-3 shadow-card md:block">
-            <div className="grid min-w-[720px] grid-cols-[3rem_repeat(7,1fr)]">
+          <div className="hidden overflow-x-auto rounded-2xl border bg-card p-3 shadow-card lg:block">
+            <div className="grid min-w-[620px] grid-cols-[3rem_repeat(7,1fr)]">
               <div />
               {days.map((d) => (
                 <div key={d.weekday} className={cn("pb-2 text-center text-xs font-semibold", d.weekday === new Date().getDay() ? "text-primary" : "text-muted-foreground")}>{d.label}</div>
@@ -170,7 +170,7 @@ export default function SchedulePage() {
           </div>
 
           {/* Day picker: phones show one day at a time; free time is shown for every size. */}
-          <div role="tablist" aria-label="Day" className="grid grid-cols-7 gap-1 rounded-2xl bg-muted p-1 md:hidden">
+          <div role="tablist" aria-label="Day" className="grid grid-cols-7 gap-1 rounded-2xl bg-muted p-1 lg:hidden">
             {days.map((d) => {
               const count = data.schedules.filter((c) => c.weekday === d.weekday).length;
               return (
@@ -186,7 +186,7 @@ export default function SchedulePage() {
           </div>
 
           <div className="grid gap-4">
-            <section className="md:hidden" aria-label={`${WEEKDAY_LONG[day]} classes`}>
+            <section className="lg:hidden" aria-label={`${WEEKDAY_LONG[day]} classes`}>
               {(() => {
                 const list = data.schedules.filter((c) => c.weekday === day);
                 return list.length ? <div className="space-y-2">{list.map((c) => block(c, false))}</div>
@@ -204,7 +204,7 @@ export default function SchedulePage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 hidden flex-wrap gap-1 md:flex" role="group" aria-label="Choose day for free time">
+              <div className="mt-3 hidden flex-wrap gap-1 lg:flex" role="group" aria-label="Choose day for free time">
                 {days.map((d) => (
                   <Button key={d.weekday} size="sm" variant={day === d.weekday ? "default" : "ghost"} aria-pressed={day === d.weekday} onClick={() => setDay(d.weekday)}>{d.label}</Button>
                 ))}

@@ -152,8 +152,9 @@ function FocusPill() {
 
 function MobileHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/85 pt-safe backdrop-blur-md lg:hidden">
-      <div className="flex h-14 items-center justify-between px-4">
+    <header className="sticky top-0 z-30 border-b bg-background/85 pt-safe pr-safe pl-safe backdrop-blur-md lg:hidden">
+      {/* Shorter on landscape phones so content gets the height. */}
+      <div className="flex h-14 items-center justify-between px-4 [@media(max-height:500px)]:h-12">
         <Brand />
         <div className="flex items-center gap-2">
           <FocusPill />
@@ -165,33 +166,43 @@ function MobileHeader() {
   );
 }
 
+/**
+ * Compact navigation for screens without the full sidebar (< 1024px):
+ *  - portrait phones (< 640px): bottom tab bar
+ *  - landscape phones / small tablets (640–1023px): left navigation rail,
+ *    which keeps the full height for content on short screens.
+ * Hidden while the on-screen keyboard is open (see KeyboardAware).
+ */
 function BottomNav() {
   const isActive = useIsActive();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreActive = MORE.some((m) => isActive(m.href));
-  const tab = "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-2xs font-medium text-muted-foreground transition-colors outline-none focus-visible:bg-muted aria-[current=page]:text-primary";
+  const items = [...BOTTOM.map((item) => ({ ...item, active: isActive(item.href) }))];
+  const tab = "flex flex-1 flex-col items-center justify-center gap-0.5 text-2xs font-medium text-muted-foreground transition-colors outline-none focus-visible:bg-muted aria-[current=page]:text-primary";
+  const pill = (active: boolean, Icon: LucideIcon) => (
+    <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition-colors", active && "bg-secondary")}>
+      <Icon className="size-5" aria-hidden />
+    </span>
+  );
+  const entries = (cls: string) => (
+    <>
+      {items.map((item) => (
+        <Link key={item.href} href={item.href} aria-current={item.active ? "page" : undefined} className={cn(tab, cls)}>
+          {pill(item.active, item.icon)}{item.label}
+        </Link>
+      ))}
+      <button type="button" onClick={() => setMoreOpen(true)} aria-current={moreActive ? "page" : undefined} aria-haspopup="dialog" className={cn(tab, cls)}>
+        {pill(moreActive, MoreHorizontal)}More
+      </button>
+    </>
+  );
   return (
     <>
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pb-safe backdrop-blur-md lg:hidden">
-        <div className="mx-auto flex max-w-lg">
-          {BOTTOM.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={tab}>
-                <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition-colors", active && "bg-secondary")}>
-                  <item.icon className="size-5" aria-hidden />
-                </span>
-                {item.label}
-              </Link>
-            );
-          })}
-          <button type="button" onClick={() => setMoreOpen(true)} aria-current={moreActive ? "page" : undefined} aria-haspopup="dialog" className={tab}>
-            <span className={cn("flex h-7 w-12 items-center justify-center rounded-full", moreActive && "bg-secondary")}>
-              <MoreHorizontal className="size-5" aria-hidden />
-            </span>
-            More
-          </button>
-        </div>
+      <nav aria-label="Main" data-bottom-nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pr-safe pb-safe pl-safe backdrop-blur-md sm:hidden">
+        <div className="mx-auto flex max-w-lg">{entries("min-h-14")}</div>
+      </nav>
+      <nav aria-label="Main" className="fixed bottom-0 left-0 z-20 hidden w-[calc(5rem+env(safe-area-inset-left))] flex-col border-r bg-background pt-[calc(3.5rem+env(safe-area-inset-top))] pb-safe pl-safe sm:flex lg:hidden [@media(max-height:500px)]:pt-[calc(3rem+env(safe-area-inset-top))] top-0">
+        <div className="flex flex-1 flex-col justify-start gap-1 overflow-y-auto py-3">{entries("min-h-14 flex-none")}</div>
       </nav>
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl pb-safe">
@@ -221,8 +232,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </a>
       <Sidebar />
       <MobileHeader />
-      <main id="main" tabIndex={-1} className="pr-safe pl-safe outline-none lg:ml-64">
-        <div className="mx-auto w-full max-w-6xl px-4 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:pt-8 lg:pb-12">
+      <main id="main" tabIndex={-1} className="pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] outline-none sm:ml-[calc(5rem+env(safe-area-inset-left))] sm:pl-0 lg:ml-64">
+        <div className="mx-auto w-full max-w-6xl px-4 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-10 lg:px-8 lg:pt-8 lg:pb-12 [.kb-open_&]:pb-6">
           {children}
         </div>
       </main>

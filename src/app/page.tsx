@@ -3,7 +3,7 @@
 import { format, isAfter, parseISO, startOfDay, subDays } from "date-fns";
 import {
   AlertTriangle, BookOpen, CalendarClock, CalendarDays, CalendarRange, CheckCircle2, CheckSquare, Flame, GraduationCap,
-  Lightbulb, Plus, Timer, TrendingUp,
+  Lightbulb, Plus, Timer, TrendingUp, Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -14,6 +14,9 @@ import { Countdown, EmptyState, ErrorState, ListSkeleton, SectionCard, StatTile,
 import { TaskRow } from "@/components/tasks/task-row";
 import { QuickAddBar } from "@/components/tasks/quick-add-bar";
 import { HeadsUpBanner } from "@/components/heads-up/heads-up-banner";
+import { GettingStarted } from "@/components/onboarding/getting-started";
+import { EventRow } from "@/components/events/event-row";
+import { upcomingEvents } from "@/lib/events";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -47,7 +50,8 @@ export default function DashboardPage() {
     const heavy = workloadByDay(data.tasks, data.exams, settings.heavyDayThreshold, 7, now).filter((d) => d.heavy);
     const suggestions = suggestPriorities(data.tasks, data.subtasks, now).slice(0, 3);
     const streak = studyStreak(data.focusSessions, data.tasks, now);
-    return { dueToday, doneToday, overdue, todaysClasses, nowMin, upcomingExams, focusToday, week, heavy, suggestions, streak };
+    const events = upcomingEvents(data.events, now, 14).slice(0, 4);
+    return { events, dueToday, doneToday, overdue, todaysClasses, nowMin, upcomingExams, focusToday, week, heavy, suggestions, streak };
   }, [data, now, settings.heavyDayThreshold]);
 
   const name = settings.displayName.trim().split(" ")[0];
@@ -67,6 +71,7 @@ export default function DashboardPage() {
       </header>
 
       <HeadsUpBanner />
+      {data && <GettingStarted data={data} />}
 
       <QuickAddBar />
       <div className="grid grid-cols-4 gap-2" role="group" aria-label="Add something else">
@@ -185,6 +190,18 @@ export default function DashboardPage() {
                 )}
               </SectionCard>
 
+              <SectionCard title="Events · today & coming up" icon={Users}
+                action={<Link href="/calendar/#upcoming-events" className="text-xs font-medium text-primary hover:underline">All events</Link>}>
+                {view.events.length === 0 ? (
+                  <EmptyState compact icon={Users} title="No events in the next 2 weeks" description="Club meetings, work shifts, appointments…"
+                    action={<Button size="sm" variant="outline" onClick={() => editors.openEvent()}><Plus /> Add event</Button>} />
+                ) : (
+                  <ul className="space-y-2">
+                    {view.events.map((e) => <li key={e.id}><EventRow event={e} now={now} compact /></li>)}
+                  </ul>
+                )}
+              </SectionCard>
+
               <SectionCard title="Upcoming exams" icon={GraduationCap} action={<Link href="/exams" className="text-xs font-medium text-primary hover:underline">All exams</Link>}>
                 {view.upcomingExams.length === 0 ? (
                   <EmptyState compact icon={GraduationCap} title="No upcoming exams" />
@@ -231,10 +248,7 @@ export default function DashboardPage() {
               </SectionCard>
             </div>
           </div>
-          {data.subjects.length === 0 && (
-            <EmptyState icon={BookOpen} title="Set up your semester" description="Add your subjects and weekly classes to see them here."
-              action={<Button onClick={() => editors.openSubject()}><Plus /> Add first subject</Button>} />
-          )}
+          
         </>
       )}
     </div>

@@ -6,11 +6,12 @@
  */
 import { addDays, differenceInMinutes, endOfDay, format, isSameDay, parseISO, startOfDay } from "date-fns";
 import { formatClock, minutesOfDay } from "./dates";
-import type { ClassSchedule, Exam, Subject, Task, UserSettings } from "./db/schema";
+import type { ClassSchedule, Exam, PersonalEvent, Subject, Task, UserSettings } from "./db/schema";
+import { eventTimeLabel } from "./events";
 import { workloadByDay } from "./insights";
 
 export type AlertSeverity = "critical" | "warning" | "info";
-export type AlertKind = "overdue" | "task-due" | "class" | "exam" | "heavy-day" | "exam-prep";
+export type AlertKind = "overdue" | "task-due" | "class" | "exam" | "heavy-day" | "exam-prep" | "event";
 
 export interface HeadsUp {
   /** Stable per occurrence, e.g. "task-due:<id>:<dueAt>", used for dedupe/dismiss. */
@@ -22,7 +23,7 @@ export interface HeadsUp {
   at: Date;
   /** True when this alert should pop a notification (crossed its heads-up threshold). */
   notify: boolean;
-  ref?: { type: "task"; task: Task } | { type: "exam"; exam: Exam } | { type: "class"; schedule: ClassSchedule };
+  ref?: { type: "task"; task: Task } | { type: "exam"; exam: Exam } | { type: "class"; schedule: ClassSchedule } | { type: "event"; event: PersonalEvent };
 }
 
 const SEVERITY_ORDER: Record<AlertSeverity, number> = { critical: 0, warning: 1, info: 2 };
@@ -35,7 +36,7 @@ function rel(mins: number): string {
 }
 
 export function computeHeadsUp(
-  data: { tasks: Task[]; exams: Exam[]; schedules: ClassSchedule[]; subjects: Subject[] },
+  data: { tasks: Task[]; exams: Exam[]; schedules: ClassSchedule[]; subjects: Subject[]; events?: PersonalEvent[] },
   settings: Pick<UserSettings, "taskReminderMinutes" | "examReminderMinutes" | "classReminderMinutes" | "heavyDayThreshold">,
   now = new Date(),
 ): HeadsUp[] {
@@ -92,6 +93,21 @@ export function computeHeadsUp(
       out.push({ id: `class:${c.id}:${day}`, kind: "class", severity: "warning", title: `${name} starts ${rel(until)}`, body: `${formatClock(c.startTime)}${c.room ? ` · ${c.room}` : ""}`, at: new Date(startOfDay(now).getTime() + start * 60_000), notify: true, ref: { type: "class", schedule: c } });
     } else if (until <= 0 && nowMin < end) {
       out.push({ id: `class-now:${c.id}:${day}`, kind: "class", severity: "info", title: `In class: ${name}`, body: `Until ${formatClock(c.endTime)}${c.room ? ` · ${c.room}` : ""}`, at: new Date(startOfDay(now).getTime() + start * 60_000), notify: false, ref: { type: "class", schedule: c } });
+    }
+  }
+
+  // Personal events: heads-up shortly before (same lead time as classes), plus today's list.
+  for (const ev of data.events ?? []) {
+    const start = parseISO(ev.startAt), end = parseISO(ev.endAt);
+    if (end < now) continue;
+    const where = ev.location ? ` · ${ev.location}` : "";
+    const until = differenceInMinutes(start, now);
+    if (!ev.allDay && until > 0 && until <= Math.max(settings.classReminderMinutes, 1)) {
+      out.push({ id: `event:${ev.id}:${ev.startAt}`, kind: "event", severity: "warning", title: `${ev.title} starts ${rel(until)}`, body: `${eventTimeLabel(ev)}${where}`, at: start, notify: true, ref: { type: "event", event: ev } });
+    } else if (start <= now) {
+      out.push({ id: `event-now:${ev.id}:${format(now, "yyyy-MM-dd")}`, kind: "event", severity: "info", title: `Now: ${ev.title}`, body: `${eventTimeLabel(ev)}${where}`, at: start, notify: false, ref: { type: "event", event: ev } });
+    } else if (start <= endOfDay(addDays(now, 1))) {
+      out.push({ id: `event-soon:${ev.id}:${ev.startAt}`, kind: "event", severity: "info", title: `${isSameDay(start, now) ? "Today" : "Tomorrow"}: ${ev.title}`, body: `${eventTimeLabel(ev)}${where}`, at: start, notify: false, ref: { type: "event", event: ev } });
     }
   }
 

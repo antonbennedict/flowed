@@ -162,6 +162,21 @@
   label[for] {
     cursor: pointer;
   }
+  /* iOS zooms into any field under 16px and doesn't zoom back out, which
+     pushes the rest of the page off-screen. On touch screens every text
+     field is at least 16px, whatever the Text size setting or breakpoint.
+     (Pinch-zoom stays enabled for accessibility.) */
+  @media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    textarea,
+    select,
+    [contenteditable="true"] {
+      font-size: max(16px, 1rem) !important;
+    }
+  }
+  /* While the keyboard is open the tab bar would sit on top of it. */
+  html.kb-open [data-bottom-nav] { display: none; }
+
   /* Grid/flex children may shrink below their content width, so long titles
      truncate instead of pushing the layout off-screen (zero specificity). */
   :where(.grid) > *,

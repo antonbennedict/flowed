@@ -9,6 +9,7 @@ Everything Flowed can do, and how to use it. New here? Start with **[Get Flowed]
 ## Dashboard (Home)
 Your day at a glance:
 - **Heads-up banner:** the most urgent thing right now. Tap it to see them all.
+- **Events · today & coming up:** your next personal events.
 - **Quick add bar:** add a task in one line (see [Quick add](#quick-add)).
 - **Exam / Class / Event / Focus** buttons for adding other things.
 - Today's progress, overdue count, focus time and tasks done this week.
@@ -56,18 +57,25 @@ Add the title, subject, date, start time, length, venue and notes, plus a **prep
 ## Calendar
 **Month, Week and Day** views show classes, task deadlines, exams and personal events. Each type has its own colour and icon. Tap a day to see its agenda, tap an item to edit it, or use **New event** for personal events (club, work, appointments).
 
+### Your events
+- **Calendar → Upcoming events** (below the calendar) lists every event in the next 60 days, grouped by day (Today, Tomorrow, then dates), with time and place. **Show past events** shows the last 10.
+- **Dashboard → Events · today & coming up** shows your next few events. **All events** jumps to the full list.
+- Tap any event to see, edit or delete it.
+- Flowed gives a heads-up shortly before an event starts (same timing as classes; change it in **Settings → Heads-up before class**).
+
 ## Heads-up (the bell)
 Flowed watches for:
 - **Overdue** tasks
 - Tasks **due soon** (within your reminder time, at least 1 hour) and due today or tomorrow
 - A **class starting** in 15 minutes (you can change this)
 - **Exams** within a day, plus any preparation still left
+- A **personal event** about to start, plus today's and tomorrow's events
 - A **heavy day tomorrow**
 
 For each alert: **Done** (completes the task), **1 hour** (snooze) or **Dismiss**. While Flowed is open, new alerts pop up. Tap **Allow notifications** to also get phone notifications while it's open.
 
 ### Reminders when Flowed is closed
-**Settings → Calendar sync → Add to Calendar.** Choose what to include (weekly classes, task deadlines, exams) and for how many weeks. On iPhone, choose **Add All**. Tip: create a calendar named "Flowed" first and pick it. Your phone's Calendar then reminds you at your chosen times.
+**Settings → Calendar sync → Add to Calendar.** Choose what to include (weekly classes, task deadlines, exams, personal events) and for how many weeks. On iPhone, choose **Add All**. Tip: create a calendar named "Flowed" first and pick it. Your phone's Calendar then reminds you at your chosen times.
 After big changes, delete the Flowed calendar in the Calendar app and add it again, so you don't get duplicates.
 
 ## Focus timer

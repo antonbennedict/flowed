@@ -127,6 +127,43 @@ try {
     await page.keyboard.press("Escape");
   } else console.log("SKIP  heads-up test (too close to midnight)");
 
+  // ---------- 4b. Personal events: dashboard card, calendar list, heads-up
+  {
+    const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const hm = (d) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    const addEvent = async (title, start, end, location) => {
+      await page.getByRole("button", { name: "Quick add", exact: true }).click();
+      await page.getByRole("menuitem", { name: "Personal event" }).click();
+      const dlg = page.getByRole("dialog");
+      await dlg.getByLabel("Title").fill(title);
+      await dlg.getByLabel("Starts").fill(ymd(start));
+      await dlg.getByLabel("Start time").fill(hm(start));
+      await dlg.getByLabel("Ends", { exact: true }).fill(ymd(end));
+      await dlg.getByLabel("End time").fill(hm(end));
+      await dlg.getByLabel("Location").fill(location);
+      await dlg.getByRole("button", { name: "Add event" }).click();
+      await dlg.waitFor({ state: "detached" });
+    };
+    await page.goto(`${BASE}/`);
+    const tomorrow = new Date(Date.now() + 86400000); tomorrow.setHours(18, 0, 0, 0);
+    await addEvent("Org general assembly", tomorrow, new Date(tomorrow.getTime() + 90 * 60000), "Student Center");
+    const soonStart = new Date(Date.now() + 10 * 60000);
+    if (soonStart.getDate() === new Date().getDate() && soonStart.getHours() < 23) {
+      await addEvent("Part-time shift", soonStart, new Date(soonStart.getTime() + 60 * 60000), "Café");
+      check(await visible(page.getByText(/Part-time shift starts in (9|10) min/)), "heads-up pops 10 minutes before an event");
+    }
+    check(await visible(page.getByRole("button", { name: /^Org general assembly, Tomorrow/ })), "dashboard shows upcoming events");
+    await page.getByRole("link", { name: "All events" }).click();
+    await page.getByRole("heading", { name: "Upcoming events" }).waitFor();
+    check(await visible(page.locator("#upcoming-events").getByText("Org general assembly")), "calendar lists all upcoming events");
+    await page.locator("#upcoming-events").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(300);
+    await shot("calendar-upcoming-events");
+    await page.locator("#upcoming-events").getByRole("button", { name: /^Org general assembly/ }).click();
+    check(await visible(page.getByRole("heading", { name: "Edit event" })), "tapping an event opens it");
+    await page.keyboard.press("Escape");
+  }
+
   // ---------- 5. Dashboard + dialog screenshots
   await page.goto(`${BASE}/`);
   await page.getByRole("heading", { level: 1 }).waitFor();

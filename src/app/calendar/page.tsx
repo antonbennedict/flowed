@@ -2,7 +2,7 @@
 
 import {
   addDays, addMonths, addWeeks, eachDayOfInterval, endOfDay, endOfMonth, endOfWeek, format, isSameDay, isSameMonth,
-  isToday, startOfDay, startOfMonth, startOfWeek, subDays, subMonths, subWeeks,
+  isToday, isTomorrow, parseISO, startOfDay, startOfMonth, startOfWeek, subDays, subMonths, subWeeks,
 } from "date-fns";
 import { BookOpen, CalendarDays, CheckSquare, ChevronLeft, ChevronRight, GraduationCap, Plus, Users, type LucideIcon } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -14,6 +14,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePlannerData } from "@/hooks/use-planner-data";
 import { buildCalendar, itemsOnDay, KIND_LABEL, type CalendarItem, type CalendarKind } from "@/lib/calendar";
 import { dayKey } from "@/lib/dates";
+import type { PersonalEvent } from "@/lib/db/schema";
+import { pastEvents, upcomingEvents } from "@/lib/events";
+import { EventRow } from "@/components/events/event-row";
 import { cn } from "@/lib/utils";
 
 type Mode = "month" | "week" | "day";
@@ -74,6 +77,54 @@ function Agenda({ day, items, onOpen, onAdd }: { day: Date; items: CalendarItem[
   );
 }
 
+
+/** Every personal event in one list, so you never have to hunt day by day. */
+function UpcomingEvents({ events, onAdd }: { events: PersonalEvent[]; onAdd: () => void }) {
+  const [showPast, setShowPast] = useState(false);
+  const now = new Date();
+  const upcoming = upcomingEvents(events, now, 60);
+  const past = pastEvents(events, now).slice(0, 10);
+  // Group by start day for scannability.
+  const groups: { label: string; items: PersonalEvent[] }[] = [];
+  for (const e of upcoming) {
+    const d = parseISO(e.startAt);
+    const label = parseISO(e.startAt) <= now ? "Happening now" : isToday(d) ? "Today" : isTomorrow(d) ? "Tomorrow" : format(d, "EEEE, MMMM d");
+    const g = groups.find((x) => x.label === label);
+    if (g) g.items.push(e); else groups.push({ label, items: [e] });
+  }
+  return (
+    <section id="upcoming-events" aria-labelledby="upcoming-events-title" className="mt-4 scroll-mt-24 rounded-2xl border bg-card p-4 shadow-card sm:p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 id="upcoming-events-title" className="flex items-center gap-2 text-sm font-semibold">
+          <Users className="size-4 text-ev-event" aria-hidden /> Upcoming events
+          {upcoming.length > 0 && <span className="rounded-full bg-ev-event/12 px-2 py-0.5 text-2xs font-semibold text-ev-event tabular">{upcoming.length}</span>}
+        </h2>
+        <Button size="sm" variant="ghost" onClick={onAdd}><Plus /> Event</Button>
+      </div>
+      {groups.length === 0 ? (
+        <EmptyState compact icon={Users} title="No upcoming events" description="Add club meetings, work shifts or appointments. They appear here and on the calendar."
+          action={<Button size="sm" variant="outline" onClick={onAdd}><Plus /> Add event</Button>} />
+      ) : (
+        <div className="space-y-4">
+          {groups.map((g) => (
+            <div key={g.label}>
+              <h3 className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{g.label}</h3>
+              <ul className="grid gap-2 md:grid-cols-2">{g.items.map((e) => <li key={e.id}><EventRow event={e} now={now} /></li>)}</ul>
+            </div>
+          ))}
+        </div>
+      )}
+      {past.length > 0 && (
+        <div className="mt-4 border-t pt-3">
+          <Button size="sm" variant="ghost" onClick={() => setShowPast((v) => !v)} aria-expanded={showPast} aria-controls="past-events">
+            {showPast ? "Hide past events" : `Show past events (${past.length})`}
+          </Button>
+          {showPast && <ul id="past-events" className="mt-2 grid gap-2 md:grid-cols-2">{past.map((e) => <li key={e.id}><EventRow event={e} now={now} past /></li>)}</ul>}
+        </div>
+      )}
+    </section>
+  );
+}
 
 export default function CalendarPage() {
   const editors = useEditors();
@@ -208,6 +259,8 @@ export default function CalendarPage() {
       )}
 
       {data && mode === "day" && <Agenda day={cursor} items={items} onOpen={open} onAdd={addOn} />}
+
+      {data && <UpcomingEvents events={data.events} onAdd={() => addOn(new Date())} />}
 
       {data && items.length === 0 && mode !== "day" && (
         <div className="mt-4">

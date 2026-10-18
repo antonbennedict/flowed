@@ -79,3 +79,51 @@ describe("ics export", () => {
     expect((ics.match(/BEGIN:VEVENT/g) ?? []).length).toBe((ics.match(/END:VEVENT/g) ?? []).length);
   });
 });
+
+import { eventDayLabel, eventTimeLabel, pastEvents, upcomingEvents } from "@/lib/events";
+import type { PersonalEvent } from "@/lib/db/schema";
+
+const ev = (p: Partial<PersonalEvent>): PersonalEvent => ({
+  id: id(), title: "Org meeting", description: "", location: "Room 5", startAt: ts, endAt: ts, allDay: false, createdAt: ts, updatedAt: ts, ...p,
+});
+
+describe("personal events", () => {
+  it("lists upcoming (incl. in-progress) and past events in the right order", () => {
+    const now = NOW;
+    const later = ev({ title: "later", startAt: addDays(now, 3).toISOString(), endAt: addHours(addDays(now, 3), 1).toISOString() });
+    const live = ev({ title: "live", startAt: subHours(now, 1).toISOString(), endAt: addHours(now, 1).toISOString() });
+    const done = ev({ title: "done", startAt: subHours(now, 5).toISOString(), endAt: subHours(now, 4).toISOString() });
+    const far = ev({ title: "far", startAt: addDays(now, 90).toISOString(), endAt: addDays(now, 90).toISOString() });
+    expect(upcomingEvents([later, live, done, far], now, 30).map((e) => e.title)).toEqual(["live", "later"]);
+    expect(pastEvents([later, live, done], now).map((e) => e.title)).toEqual(["done"]);
+    expect(eventDayLabel(live, now)).toBe("Now");
+    expect(eventDayLabel(later, now)).toBe("Saturday");
+  });
+
+  it("formats time ranges readably", () => {
+    const d = (h: number, m = 0) => new Date(2026, 9, 20, h, m).toISOString();
+    expect(eventTimeLabel(ev({ startAt: d(18), endAt: d(19, 30) }))).toBe("6:00 – 7:30 PM");
+    expect(eventTimeLabel(ev({ startAt: d(11), endAt: d(13) }))).toBe("11:00 AM – 1:00 PM");
+    expect(eventTimeLabel(ev({ allDay: true, startAt: d(0), endAt: d(23, 59) }))).toBe("All day");
+  });
+
+  it("gives a heads-up before an event and lists today's", () => {
+    const soon = ev({ title: "Shift", startAt: addMinutes(NOW, 10).toISOString(), endAt: addHours(NOW, 3).toISOString() });
+    const tonight = ev({ title: "Dinner", startAt: addHours(NOW, 8).toISOString(), endAt: addHours(NOW, 10).toISOString() });
+    const a = computeHeadsUp({ tasks: [], exams: [], schedules: [], subjects: [], events: [soon, tonight] }, settings, NOW);
+    expect(a.find((x) => x.title === "Shift starts in 10 min")).toMatchObject({ kind: "event", severity: "warning", notify: true });
+    expect(a.find((x) => x.title === "Today: Dinner")).toMatchObject({ severity: "info", notify: false });
+  });
+
+  it("exports events to .ics, all-day ones as dates", () => {
+    const allDay = ev({ title: "Foundation Day", allDay: true, startAt: new Date(2026, 9, 20).toISOString(), endAt: new Date(2026, 9, 20, 23, 59).toISOString() });
+    const timed = ev({ title: "Org meeting", startAt: addDays(NOW, 1).toISOString(), endAt: addHours(addDays(NOW, 1), 1).toISOString() });
+    const { ics, count } = buildIcs({ tasks: [], exams: [], schedules: [], subjects: [], events: [allDay, timed] }, settings,
+      { includeClasses: false, includeExams: false, includeTasks: false, includeEvents: true, weeks: 1 }, NOW);
+    expect(count).toBe(2);
+    expect(ics).toContain("DTSTART;VALUE=DATE:20261020");
+    expect(ics).toContain("DTEND;VALUE=DATE:20261021");
+    expect(ics).toContain("LOCATION:Room 5");
+    expect(ics).toContain("TRIGGER:-PT15M");
+  });
+});

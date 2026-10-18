@@ -2,7 +2,7 @@
 
 import { format, isAfter, parseISO } from "date-fns";
 import {
-  AlarmClock, AlertTriangle, Bell, BellRing, BookOpen, CalendarClock, CheckCircle2, ClipboardList, Flame, GraduationCap, X,
+  AlarmClock, AlertTriangle, Bell, BellRing, BookOpen, CalendarClock, CheckCircle2, ClipboardList, Flame, GraduationCap, Users, X,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -15,13 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePlannerData } from "@/hooks/use-planner-data";
 import type { AlertKind, HeadsUp } from "@/lib/alerts";
+import { upcomingEvents } from "@/lib/events";
 import { isDueToday } from "@/lib/insights";
 import { getNotificationStatus, requestNotificationPermission, type NotificationStatus } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 import { useHeadsUp } from "./heads-up-provider";
 
 const ICON: Record<AlertKind, LucideIcon> = {
-  overdue: AlertTriangle, "task-due": AlarmClock, class: CalendarClock, exam: GraduationCap, "heavy-day": Flame, "exam-prep": ClipboardList,
+  overdue: AlertTriangle, "task-due": AlarmClock, class: CalendarClock, exam: GraduationCap, "heavy-day": Flame, "exam-prep": ClipboardList, event: Users,
 };
 const TONE = {
   critical: "bg-destructive/12 text-destructive",
@@ -55,6 +56,7 @@ function AlertItem({ a }: { a: HeadsUp }) {
     if (a.ref?.type === "task") editors.openTask(a.ref.task);
     else if (a.ref?.type === "exam") editors.openExam(a.ref.exam);
     else if (a.ref?.type === "class") editors.openClass(a.ref.schedule);
+    else if (a.ref?.type === "event") editors.openEvent(a.ref.event);
   };
   return (
     <li className="rounded-2xl border bg-card p-3">
@@ -92,7 +94,8 @@ export function HeadsUpPanel() {
     const classes = data.schedules.filter((c) => c.weekday === now.getDay());
     const due = data.tasks.filter((t) => !t.completed && isDueToday(t, now));
     const nextExam = data.exams.find((e) => !e.completed && isAfter(parseISO(e.examAt), now));
-    return { now, classes, due, nextExam };
+    const events = upcomingEvents(data.events, now, 0);
+    return { now, classes, due, nextExam, events };
   }, [data]);
 
   const urgent = alerts.filter((a) => a.severity !== "info");
@@ -111,6 +114,11 @@ export function HeadsUpPanel() {
               <p className="text-xs font-semibold tracking-wide text-secondary-foreground uppercase">{format(briefing.now, "EEEE, MMM d")}</p>
               <ul className="mt-2 space-y-1.5 text-sm">
                 <li className="flex items-center gap-2"><BookOpen className="size-4 text-primary" aria-hidden />{briefing.classes.length ? `${briefing.classes.length} class${briefing.classes.length === 1 ? "" : "es"} today` : "No classes today"}</li>
+                {briefing.events.length > 0 && (
+                  <li className="flex items-center gap-2"><Users className="size-4 text-primary" aria-hidden />
+                    {briefing.events.length} event{briefing.events.length === 1 ? "" : "s"} today: {briefing.events.map((e) => e.title).join(", ")}
+                  </li>
+                )}
                 <li className="flex items-center gap-2"><AlarmClock className="size-4 text-primary" aria-hidden />{briefing.due.length ? `${briefing.due.length} task${briefing.due.length === 1 ? "" : "s"} due today` : "Nothing due today"}</li>
                 {briefing.nextExam && (
                   <li className="flex items-center gap-2"><GraduationCap className="size-4 text-primary" aria-hidden />

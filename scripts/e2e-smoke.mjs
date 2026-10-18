@@ -63,10 +63,11 @@ try {
   const { ctx, page } = await run({ width: 390, height: 844 }, "mobile");
   await page.goto(`${BASE}/`);
   await page.getByRole("heading", { level: 1 }).waitFor();
-  check(await visible(page.getByText("Set up your semester")), "first launch shows onboarding empty state");
+  check(await visible(page.getByRole("heading", { name: "Getting started" })), "first launch shows the getting-started checklist");
 
   // Subject
-  await page.getByRole("button", { name: "Add first subject" }).click();
+  await page.getByRole("button", { name: "Quick add", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Subject" }).click();
   await page.getByLabel("Name").fill("Data Structures");
   await page.getByLabel("Code").fill("CS 201");
   await page.getByLabel("Instructor").fill("Prof. Reyes");

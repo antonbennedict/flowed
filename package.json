@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "node scripts/e2e-smoke.mjs",
-    "test:all": "npm run typecheck && npm run lint && npm test && npm run build && npm run test:e2e && npm run test:offline && npm run test:features",
+    "test:all": "npm run typecheck && npm run lint && npm test && npm run build && npm run test:e2e && npm run test:offline && npm run test:features && npm run test:responsive",
     "icons": "node scripts/generate-icons.mjs",
     "assets": "capacitor-assets generate --android --ios --iconBackgroundColor \"#4F46E5\" --iconBackgroundColorDark \"#4F46E5\" --splashBackgroundColor \"#F7F7FB\" --splashBackgroundColorDark \"#0E0C1D\"",
     "cap:sync": "npm run build && cap sync",
@@ -21,7 +21,8 @@
     "ios:open": "npm run cap:sync && cap open ios",
     "test:offline": "node scripts/e2e-offline.mjs",
     "deploy:netlify": "npm run build && npx --yes netlify-cli deploy --dir=out --prod",
-    "test:features": "node scripts/e2e-features.mjs"
+    "test:features": "node scripts/e2e-features.mjs",
+    "test:responsive": "node scripts/e2e-responsive.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
