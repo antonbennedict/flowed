@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="1024" height="1024">
+  <!-- Flowed mark: a single stroke rises and flows into a wave to form an "F";
+       the middle arm sheds droplets in the direction of the flow.
+       Source of truth for app icons (scripts/generate-icons.mjs).
+       Keep in sync with src/components/brand/flowed-mark.tsx. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4F46E5"/><stop offset="0.55" stop-color="#7C3AED"/><stop offset="1" stop-color="#C026D3"/>
+    </linearGradient>
+    <radialGradient id="hl" cx="0.25" cy="0.15" r="0.75">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#EDE9FE"/>
+    </linearGradient>
+    <clipPath id="tileclip"><rect width="120" height="120" rx="30"/></clipPath>
+  </defs>
+  <rect id="tile" width="120" height="120" rx="30" fill="url(#bg)"/>
+  <g clip-path="url(#tileclip)">
+  <path d="M-4 84 C 22 70, 44 98, 72 86 S 112 70, 126 78 L126 126 L-4 126Z" fill="#fff" opacity="0.07"/>
+  <path d="M-4 98 C 26 86, 50 112, 80 100 S 116 88, 126 94 L126 126 L-4 126Z" fill="#fff" opacity="0.07"/>
+  <rect width="120" height="120" rx="30" fill="url(#hl)"/>
+  </g>
+  <g id="glyph">
+  <g fill="none" stroke="url(#ink)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M42 93 C40 72 38 52 45 40 C52 27 66 25 75 31 C83 36 89 33 93 25" stroke-width="12.5"/>
+    <path d="M41.5 63 C50 55 58 67 70 59" stroke-width="10.5"/>
+  </g>
+  <g fill="#fff">
+    <circle cx="82.5" cy="55" r="4.2" opacity="0.92"/><circle cx="91.5" cy="52" r="3" opacity="0.7"/><circle cx="98.5" cy="50" r="1.9" opacity="0.5"/>
+  </g>
+  </g>
+</svg>
